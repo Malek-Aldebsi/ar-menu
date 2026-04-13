@@ -62,14 +62,11 @@
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
-import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.esm.js";
+import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js";
 
-const urlParams = new URLSearchParams(window.location.search);
-const item = urlParams.get("item") || "burger";
+const item = new URLSearchParams(window.location.search).get("item") || "burger";
 
-document.getElementById("label").innerText = "Item: " + item;
-
-const modelPaths = {
+const models = {
   burger: "./assets/burger.glb",
   pizza: "./assets/pizza.glb",
   sushi: "./assets/sushi.glb"
@@ -93,7 +90,7 @@ async function startAR() {
 
     const anchor = mindarThree.addAnchor(0);
 
-    const gltf = await loadModel(modelPaths[item]);
+    const gltf = await loadModel(models[item]);
 
     const model = gltf.scene;
 
@@ -110,17 +107,12 @@ async function startAR() {
     });
 
   } catch (err) {
-    console.error("AR ERROR:", err);
-    alert("AR failed. Check console (F12).");
+    console.error(err);
+    alert("AR failed — check console (F12)");
   }
 }
 
 startAR();
-
-// CLOSE BUTTON
-document.getElementById("closeBtn").onclick = async () => {
-  location.href = "./index.html";
-};
 </script>
 
 </body>
