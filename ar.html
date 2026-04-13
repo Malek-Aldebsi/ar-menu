@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AR Menu</title>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial;
+    }
+
+    #ar-container {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    #closeBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      background: white;
+      border: none;
+      font-size: 22px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    #label {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mind-ar-image-three.prod.js"></script>
+</head>
+
+<body>
+
+<div id="ar-container"></div>
+<button id="closeBtn">✕</button>
+<div id="label">Loading...</div>
+
+<script>
+let mindarThree;
+let renderer;
+let anchor;
+
+const urlParams = new URLSearchParams(window.location.search);
+const item = urlParams.get("item") || "burger";
+
+document.getElementById("label").innerText = "Item: " + item;
+
+const modelPaths = {
+  burger: "./assets/burger.glb",
+  pizza: "./assets/pizza.glb",
+  sushi: "./assets/sushi.glb"
+};
+
+async function loadModel(path) {
+  return new Promise((resolve, reject) => {
+    const loader = new THREE.GLTFLoader();
+
+    loader.load(
+      path,
+      (gltf) => resolve(gltf.scene),
+      undefined,
+      (err) => reject(err)
+    );
+  });
+}
+
+async function startAR() {
+  mindarThree = new window.MINDAR.IMAGE.MindARThree({
+    container: document.querySelector("#ar-container"),
+    imageTargetSrc: "./target.mind"
+  });
+
+  const { scene, camera } = mindarThree;
+  renderer = mindarThree.renderer;
+
+  anchor = mindarThree.addAnchor(0);
+
+  const modelPath = modelPaths[item] || modelPaths.burger;
+
+  const model = await loadModel(modelPath);
+
+  // scale + positioning (VERY IMPORTANT for food models)
+  model.scale.set(0.5, 0.5, 0.5);
+  model.position.set(0, -0.5, 0);
+
+  anchor.group.add(model);
+
+  await mindarThree.start();
+
+  renderer.setAnimationLoop(() => {
+    model.rotation.y += 0.01; // subtle motion
+    renderer.render(scene, camera);
+  });
+}
+
+startAR();
+
+// CLOSE BUTTON
+document.getElementById("closeBtn").onclick = async () => {
+  await mindarThree.stop();
+  window.location.href = "./index.html";
+};
+</script>
+
+</body>
+</html>
